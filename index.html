@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DC Cherry Blossoms — Spring 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garant:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --cream: #FAF6F0;
+    --parchment: #F2EBE0;
+    --pink-pale: #F9D5DC;
+    --pink: #E8A0B0;
+    --pink-deep: #C96B82;
+    --pink-vivid: #D94F6E;
+    --navy: #1C2235;
+    --navy-soft: #2E3A52;
+    --gold: #B8965A;
+    --gold-light: #D4B07A;
+    --text: #2A1F1A;
+    --text-muted: #6B5E58;
+    --white: #FFFFFF;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Jost', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 40px;
+    background: rgba(250,246,240,0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(200,160,160,0.2);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 15px; font-weight: 600;
+    letter-spacing: 0.15em; color: var(--navy);
+    text-transform: uppercase;
+  }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a {
+    font-size: 10px; font-weight: 400; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--text-muted);
+    text-decoration: none; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--pink-deep); }
+
+  /* ─── HERO ─── */
+  .hero {
+    position: relative; min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 120px 40px 80px;
+    overflow: hidden;
+    background: linear-gradient(170deg, #FFF5F7 0%, var(--cream) 45%, #F0EBE5 100%);
+  }
+
+  .hero-eyebrow {
+    font-size: 10px; font-weight: 400; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 24px;
+    animation: fadeUp 0.8s ease both 0.2s;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garant', serif;
+    font-size: clamp(52px, 8vw, 110px);
+    font-weight: 300; line-height: 0.95;
+    color: var(--navy); margin-bottom: 10px;
+    animation: fadeUp 0.8s ease both 0.3s;
+  }
+  .hero-title em {
+    font-style: italic; color: var(--pink-deep);
+  }
+
+  .hero-subtitle {
+    font-family: 'Cormorant Garant', serif;
+    font-size: clamp(18px, 2.5vw, 26px);
+    font-weight: 300; font-style: italic;
+    color: var(--text-muted); margin: 20px 0 40px;
+    animation: fadeUp 0.8s ease both 0.4s;
+  }
+
+  .hero-stats {
+    display: flex; gap: 48px; justify-content: center; flex-wrap: wrap;
+    margin-top: 40px;
+    animation: fadeUp 0.8s ease both 0.5s;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat .num {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 42px; font-weight: 300;
+    color: var(--pink-vivid); display: block; line-height: 1;
+  }
+  .hero-stat .label {
+    font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--text-muted); margin-top: 6px; display: block;
+  }
+
+  /* Petals */
+  .petal {
+    position: absolute; pointer-events: none;
+    font-size: 24px; opacity: 0;
+    animation: petalFall linear infinite;
+  }
+
+  @keyframes petalFall {
+    0%   { transform: translateY(-60px) rotate(0deg) translateX(0); opacity: 0; }
+    10%  { opacity: 0.7; }
+    90%  { opacity: 0.5; }
+    100% { transform: translateY(110vh) rotate(720deg) translateX(80px); opacity: 0; }
+  }
+
+  /* Decorative branch SVG area */
+  .branch-art {
+    position: absolute; top: 0; right: -20px;
+    width: 340px; opacity: 0.12; pointer-events: none;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    display: flex; align-items: center; gap: 16px;
+    margin: 64px auto; max-width: 200px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--pink);
+  }
+  .divider span {
+    font-size: 18px; color: var(--pink);
+  }
+
+  /* ─── SECTIONS ─── */
+  section {
+    max-width: 900px; margin: 0 auto;
+    padding: 28px 32px;
+  }
+
+  .section-eyebrow {
+    font-size: 9px; font-weight: 400; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-eyebrow::after {
+    content: ''; flex: 1; height: 1px; background: var(--gold-light); opacity: 0.5;
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garant', serif;
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 400; line-height: 1.1;
+    color: var(--navy); margin-bottom: 24px;
+  }
+  .section-title em { font-style: italic; color: var(--pink-deep); }
+
+  p.lead {
+    font-size: 17px; font-weight: 300; line-height: 1.75;
+    color: var(--text-muted); margin-bottom: 20px;
+  }
+
+  p.body-text {
+    font-size: 15px; font-weight: 300; line-height: 1.8;
+    color: var(--text-muted); margin-bottom: 16px;
+  }
+
+  /* ─── 2026 FORECAST BOX ─── */
+  .forecast-banner {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 100%);
+    border-radius: 2px; padding: 48px 48px;
+    margin: 48px 0; position: relative; overflow: hidden;
+    color: var(--white);
+  }
+  .forecast-banner::before {
+    content: '桜'; position: absolute;
+    font-size: 200px; opacity: 0.04;
+    right: -20px; top: -40px; line-height: 1;
+    font-family: serif;
+  }
+  .forecast-banner .tag {
+    display: inline-block;
+    font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--pink); border: 1px solid var(--pink-deep);
+    padding: 4px 12px; margin-bottom: 20px; border-radius: 1px;
+  }
+  .forecast-banner h3 {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 34px; font-weight: 300; margin-bottom: 16px;
+    color: var(--white);
+  }
+  .forecast-banner p {
+    font-size: 15px; font-weight: 300; line-height: 1.8;
+    color: rgba(255,255,255,0.7); max-width: 600px;
+  }
+  .forecast-banner .window {
+    margin-top: 28px; display: flex; gap: 32px; flex-wrap: wrap;
+  }
+  .forecast-window-item { }
+  .forecast-window-item .fdate {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 28px; font-weight: 300; color: var(--pink-pale);
+    display: block;
+  }
+  .forecast-window-item .fdesc {
+    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255,255,255,0.4); margin-top: 2px; display: block;
+  }
+  .forecast-divider {
+    width: 1px; background: rgba(255,255,255,0.15);
+    align-self: stretch;
+  }
+  .caveat {
+    margin-top: 20px;
+    font-size: 12px; color: rgba(255,255,255,0.35);
+    font-style: italic;
+  }
+
+  /* ─── HISTORICAL CHART ─── */
+  .chart-wrap {
+    background: var(--parchment);
+    border: 1px solid rgba(200,160,160,0.25);
+    border-radius: 2px; padding: 40px;
+    margin: 32px 0;
+  }
+  .chart-title {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 22px; font-weight: 400;
+    color: var(--navy); margin-bottom: 8px;
+  }
+  .chart-sub {
+    font-size: 11px; color: var(--text-muted); margin-bottom: 28px;
+    letter-spacing: 0.05em;
+  }
+
+  .chart-bars {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .bar-row {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .bar-year {
+    font-size: 11px; font-weight: 500; color: var(--navy-soft);
+    width: 36px; text-align: right; flex-shrink: 0;
+  }
+  .bar-track {
+    flex: 1; height: 28px; background: rgba(200,160,160,0.12);
+    border-radius: 2px; position: relative; overflow: visible;
+  }
+  .bar-fill {
+    height: 100%; border-radius: 2px;
+    position: absolute;
+    background: linear-gradient(90deg, var(--pink-pale), var(--pink));
+    transition: width 1s ease;
+    display: flex; align-items: center;
+  }
+  .bar-fill.highlight {
+    background: linear-gradient(90deg, var(--pink-deep), var(--pink-vivid));
+  }
+  .bar-fill.forecast {
+    background: repeating-linear-gradient(
+      45deg, transparent, transparent 4px,
+      rgba(200,100,130,0.3) 4px, rgba(200,100,130,0.3) 8px
+    );
+    border: 1px dashed var(--pink-deep);
+  }
+  .bar-date {
+    position: absolute; right: -90px;
+    font-size: 11px; color: var(--text-muted); white-space: nowrap;
+  }
+  .bar-date strong { color: var(--navy); }
+
+  .chart-legend {
+    display: flex; gap: 24px; margin-top: 28px; flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--text-muted);
+  }
+  .legend-swatch {
+    width: 24px; height: 10px; border-radius: 1px;
+  }
+  .avg-line {
+    position: absolute; top: 0; bottom: 0; width: 2px;
+    background: var(--gold); opacity: 0.6; z-index: 2;
+  }
+
+  .avg-label-row {
+    display: flex; justify-content: flex-end; margin-top: 12px;
+  }
+  .avg-label {
+    font-size: 10px; color: var(--gold);
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── BLOOM STAGES ─── */
+  .stages-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: rgba(200,160,160,0.2);
+    margin: 32px 0; border: 1px solid rgba(200,160,160,0.2);
+  }
+  .stage-item {
+    background: var(--cream); padding: 24px 20px;
+    text-align: center;
+  }
+  .stage-num {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 36px; font-weight: 300; color: var(--pink);
+    display: block; line-height: 1;
+  }
+  .stage-icon { font-size: 28px; margin: 8px 0; display: block; }
+  .stage-name {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--navy); display: block; margin-bottom: 8px;
+  }
+  .stage-desc {
+    font-size: 12px; font-weight: 300; color: var(--text-muted); line-height: 1.6;
+  }
+
+  /* ─── LOCATIONS ─── */
+  .locations-list { margin: 32px 0; display: flex; flex-direction: column; gap: 0; }
+  .location-item {
+    display: grid; grid-template-columns: 48px 1fr auto;
+    gap: 20px; align-items: start;
+    padding: 28px 0; border-bottom: 1px solid rgba(200,160,160,0.2);
+  }
+  .location-item:last-child { border-bottom: none; }
+  .location-num {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 38px; font-weight: 300; color: var(--pink-pale);
+    line-height: 1; padding-top: 4px;
+  }
+  .location-body { }
+  .location-name {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 22px; font-weight: 600; color: var(--navy); margin-bottom: 4px;
+  }
+  .location-meta {
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 10px;
+  }
+  .location-desc {
+    font-size: 14px; font-weight: 300; line-height: 1.75; color: var(--text-muted);
+  }
+  .location-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .tag-chip {
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 3px 10px; border: 1px solid var(--pink);
+    color: var(--pink-deep); border-radius: 1px;
+  }
+  .tag-chip.yellow { border-color: var(--gold); color: var(--gold); }
+
+  /* ─── FUN FACTS ─── */
+  .facts-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+    background: rgba(200,160,160,0.2);
+    border: 1px solid rgba(200,160,160,0.2);
+    margin: 32px 0;
+  }
+  .fact-item {
+    background: var(--cream); padding: 32px 28px;
+  }
+  .fact-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+  .fact-title {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 18px; font-weight: 600; color: var(--navy); margin-bottom: 8px;
+  }
+  .fact-body {
+    font-size: 13px; font-weight: 300; line-height: 1.75; color: var(--text-muted);
+  }
+  .fact-body strong { color: var(--navy-soft); font-weight: 500; }
+
+  /* ─── RESPONSIVE IFRAME ─── */
+  .iframe-wrap {
+    position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
+    margin: 16px 0; border-radius: 2px;
+    border: 1px solid rgba(200,160,160,0.25);
+  }
+  .iframe-wrap iframe {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
+  }
+
+  /* ─── TECH TOOLS ─── */
+  .tools-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 32px 0;
+  }
+  .tool-card {
+    border: 1px solid rgba(200,160,160,0.3);
+    padding: 24px; border-radius: 2px;
+    background: var(--white);
+  }
+  .tool-name {
+    font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 8px; display: block;
+  }
+  .tool-title {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 18px; font-weight: 600; color: var(--navy); margin-bottom: 8px;
+  }
+  .tool-desc {
+    font-size: 13px; font-weight: 300; line-height: 1.7; color: var(--text-muted);
+  }
+  .tool-link {
+    display: inline-block; margin-top: 12px;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--pink-deep); text-decoration: none;
+  }
+  .tool-link:hover { text-decoration: underline; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--navy); color: rgba(255,255,255,0.4);
+    text-align: center; padding: 48px 32px;
+    font-size: 11px; letter-spacing: 0.15em; line-height: 2;
+  }
+  footer span { color: rgba(255,255,255,0.2); margin: 0 8px; }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  /* ─── BLOOM PROGRESS TIMELINE ─── */
+  .timeline-strip-wrap {
+    margin: 32px 0 0;
+  }
+
+  .timeline-strip {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    padding: 20px 0 52px;
+  }
+
+  .timeline-line {
+    position: absolute;
+    top: 42px;
+    left: 6.25%;
+    right: 6.25%;
+    height: 2px;
+    background: var(--pink-pale);
+    z-index: 0;
+  }
+
+  .timeline-node-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+
+  .timeline-node {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    position: relative;
+  }
+
+  .timeline-node.past {
+    background: var(--pink);
+    border: 2px solid var(--pink);
+  }
+
+  .timeline-node.current {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+    background: var(--pink-vivid);
+    border: 3px solid var(--pink-vivid);
+    animation: pulseRing 2s ease-in-out infinite;
+  }
+
+  .timeline-node.future {
+    background: transparent;
+    border: 2px solid var(--pink-pale);
+  }
+
+  @keyframes pulseRing {
+    0%   { box-shadow: 0 0 0 0 rgba(217, 79, 110, 0.4); }
+    70%  { box-shadow: 0 0 0 14px rgba(217, 79, 110, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(217, 79, 110, 0); }
+  }
+
+  .timeline-name {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: 10px;
+    line-height: 1.4;
+    max-width: 80px;
+  }
+
+  .timeline-name.past   { color: var(--pink-deep); font-weight: 500; }
+  .timeline-name.current { color: var(--pink-vivid); font-weight: 500; }
+  .timeline-name.future  { color: rgba(107, 94, 88, 0.45); }
+
+  .you-are-here {
+    position: absolute;
+    top: calc(100% + 8px);
+    white-space: nowrap;
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--pink-vivid);
+    font-weight: 500;
+    padding: 2px 8px;
+    border: 1px solid rgba(217, 79, 110, 0.35);
+    border-radius: 2px;
+  }
+
+  .timeline-updated {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* ─── LEAFLET MAP ─── */
+  #blossom-map {
+    height: 420px;
+    border-radius: 2px;
+    margin: 32px 0;
+    border: 1px solid rgba(200,160,160,0.25);
+  }
+
+  .blossom-marker {
+    width: 32px;
+    height: 32px;
+    background: var(--pink-deep);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garant', serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    border: 2px solid rgba(255,255,255,0.7);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+  }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 2px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12) !important;
+    border: 1px solid rgba(200,160,160,0.3) !important;
+  }
+
+  .blossom-popup .popup-num {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--pink-pale);
+    line-height: 1;
+  }
+
+  .blossom-popup .popup-name {
+    font-family: 'Cormorant Garant', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--navy);
+    margin: 2px 0 4px;
+  }
+
+  .blossom-popup .popup-meta {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+
+  .blossom-popup .popup-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .blossom-popup .popup-tag {
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border: 1px solid var(--pink);
+    color: var(--pink-deep);
+    border-radius: 1px;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 640px) {
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    section { padding: 24px 20px; }
+    .facts-grid, .tools-grid { grid-template-columns: 1fr; }
+    .stages-grid { grid-template-columns: 1fr 1fr; }
+    .forecast-banner { padding: 28px; }
+    .chart-wrap { padding: 24px; }
+    .bar-date { display: none; }
+    .bar-track { margin-right: 0; }
+    .location-item { grid-template-columns: 36px 1fr; }
+    .location-item > :last-child { grid-column: 2; }
+    .timeline-strip-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 32px -20px 0; padding: 0 20px; }
+    .timeline-strip { min-width: max-content; }
+    .timeline-node-wrap { flex: none; width: 80px; }
+    #blossom-map { height: 300px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">2026 Washington, DC Cherry Blossom Guide</div>
+  <div class="nav-links">
+    <a href="#progress">Progress</a>
+    <a href="#forecast">Forecast</a>
+    <a href="#locations">Locations</a>
+    <a href="#history">History</a>
+    <a href="#stages">Stages</a>
+    <a href="#facts">Facts</a>
+    <a href="#tools">Tools</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <!-- Floating petals -->
+  <div class="petal" style="left:5%;animation-duration:9s;animation-delay:0s;font-size:18px;">🌸</div>
+  <div class="petal" style="left:15%;animation-duration:12s;animation-delay:2s;font-size:14px;">🌸</div>
+  <div class="petal" style="left:25%;animation-duration:10s;animation-delay:5s;font-size:20px;">🌸</div>
+  <div class="petal" style="left:40%;animation-duration:14s;animation-delay:1s;font-size:12px;">🌸</div>
+  <div class="petal" style="left:55%;animation-duration:11s;animation-delay:3.5s;font-size:16px;">🌸</div>
+  <div class="petal" style="left:68%;animation-duration:9.5s;animation-delay:6s;font-size:22px;">🌸</div>
+  <div class="petal" style="left:78%;animation-duration:13s;animation-delay:0.5s;font-size:14px;">🌸</div>
+  <div class="petal" style="left:88%;animation-duration:10.5s;animation-delay:4s;font-size:18px;">🌸</div>
+  <div class="petal" style="left:94%;animation-duration:12.5s;animation-delay:2.5s;font-size:13px;">🌸</div>
+  <div class="petal" style="left:48%;animation-duration:8s;animation-delay:7s;font-size:20px;">🌸</div>
+
+
+  <h1 class="hero-title">
+    The <em>Sakura</em><br>Field Guide
+  </h1>
+
+  <p class="hero-subtitle">A naturalist's companion for the 2026 cherry blossom season in DC</p>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <span class="num">~3,800</span>
+      <span class="label">Cherry Trees</span>
+    </div>
+    <div class="hero-stat">
+      <span class="num">Mar 28–Apr 10</span>
+      <span class="label">Peak Season Estimate</span>
+    </div>
+    <div class="hero-stat">
+      <span class="num">1.5M+</span>
+      <span class="label">Annual Visitors</span>
+    </div>
+  </div>
+</div>
+
+<!-- BLOOM PROGRESS -->
+<section id="progress">
+  <div class="section-eyebrow">Live Season Status</div>
+  <h2 class="section-title"><em>Bloom</em> Progress Tracker</h2>
+  <div class="timeline-strip-wrap fade-in">
+    <div class="timeline-strip" id="bloom-timeline-track"></div>
+  </div>
+  <p class="timeline-updated" id="timeline-updated"></p>
+</section>
+
+<!-- FORECAST -->
+<section id="forecast">
+  <div class="section-eyebrow">2026 Projections</div>
+  <h2 class="section-title">This Year's <em>Outlook</em></h2>
+
+  <p class="lead">
+    After several years of historically early blooms, 2026 is shaping up differently. The colder-than-normal winter has kept the trees firmly dormant, and the National Park Service is projecting peak bloom will arrive <strong>later than we've seen in recent years, likely late March into early April.</strong>
+  </p>
+
+  <div class="forecast-banner">
+    <div class="tag">🌸 2026 Peak Bloom Projection</div>
+    <h3>Later Than Recent Years</h3>
+    <p>
+      Due to this winter's record cold, the Yoshino cherry trees are still fully dormant as of late February. NPS spokesman Mike Litterst confirmed bloom will come "later in the season than we've seen for the last few years." No official forecast has been issued yet, NPS considers predictions reliable only within ~10 days but the festival window provides the target range.
+    </p>
+    <div class="window">
+      <div class="forecast-window-item">
+        <span class="fdate">March 28th</span>
+        <span class="fdesc">Earliest Realistic Peak</span>
+      </div>
+      <div class="forecast-divider"></div>
+      <div class="forecast-window-item">
+        <span class="fdate">April 1st-10th</span>
+        <span class="fdesc">Most Likely Window</span>
+      </div>
+      <div class="forecast-divider"></div>
+      <div class="forecast-window-item">
+        <span class="fdate">Mar 20 – Apr 12</span>
+        <span class="fdesc">Festival Dates (Official)</span>
+      </div>
+    </div>
+    <p class="caveat">NPS official forecast releases ~March 1. Monitor ebird.org/alert and the NPS BloomCam for live updates.</p>
+  </div>
+
+  <p class="body-text">
+    <strong>Peak bloom refers to 70% of Yoshino blossoms being open</strong>. Once declared, the window typically lasts 3–7 days, weather permitting. A warm spell, rain, or wind can strip petals overnight or rush the cycle. The days <em>before</em> peak are often just as stunning, with fewer crowds.
+  </p>
+
+</section>
+
+<!-- LOCATIONS -->
+<section id="locations">
+  <div class="section-eyebrow">Where to Go</div>
+  <h2 class="section-title">Premier <em>Blossom</em> Locations</h2>
+  <p class="lead">DC's cherry trees grow in three primary NPS locations, plus several lesser-known spots. Each spot has its own character and crowd profile.</p>
+
+  <div id="blossom-map"></div>
+
+  <div class="locations-list fade-in">
+
+    <div class="location-item">
+      <div class="location-num">01</div>
+      <div class="location-body">
+        <div class="location-name">Tidal Basin</div>
+        <div class="location-meta">West Potomac Park · The Iconic Loop</div>
+        <div class="location-desc">
+          The crown jewel and typical postcard shot: Washington Monument and Jefferson Memorial framed in pink. The 1.75-mile loop path encircles the basin and is lined with hundreds of Yoshino cherry trees. Peak bloom here is what the NPS officially declares. Expect massive crowds 8am–5pm on any weekend during peak. Tactic: arrive before sunrise. The BloomCam streams live at the NPS website.
+        </div>
+        <div class="location-tags">
+          <span class="tag-chip">Yoshino</span>
+          <span class="tag-chip yellow">Sunrise Magic</span>
+          <span class="tag-chip">Seawall Construction 2026</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="location-item">
+      <div class="location-num">02</div>
+      <div class="location-body">
+        <div class="location-name">East Potomac Park / Hains Point</div>
+        <div class="location-meta">SW Washington DC · 1,100+ Trees</div>
+        <div class="location-desc">
+          The local secret for photographers. Over 1,100 cherry trees on a peninsula jutting into the Potomac with fewer crowds than the Tidal Basin, and the Kwanzan variety here blooms 1–2 weeks after the Yoshinos, extending your viewing window significantly. The golf course fairways fill with fallen petals like pink snow. Also DC's prime rare bird and gull hotspot in winter.
+        </div>
+        <div class="location-tags">
+          <span class="tag-chip">Kwanzan</span>
+          <span class="tag-chip">Lower Crowds</span>
+          <span class="tag-chip yellow">Later Bloom</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="location-item">
+      <div class="location-num">03</div>
+      <div class="location-body">
+        <div class="location-name">Washington Monument Grounds</div>
+        <div class="location-meta">National Mall · Open Sight Lines</div>
+        <div class="location-desc">
+          Cherry trees ring the base of the Monument, providing unobstructed 360° framing shots. Tends to be slightly less crowded than the Tidal Basin loop while still delivering the iconic monumental backdrop. The wide open turf also makes a good spot to lay on the ground and shoot upward through the branches.
+        </div>
+        <div class="location-tags">
+          <span class="tag-chip">Monument Views</span>
+          <span class="tag-chip">Low Crowds</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="location-item">
+      <div class="location-num">04</div>
+      <div class="location-body">
+        <div class="location-name">Kenilworth Park & Aquatic Gardens</div>
+        <div class="location-meta">NE Washington DC · Near Anacostia Station</div>
+        <div class="location-desc">
+          Cherry blossoms here aren't the main event, but the surrounding seasonal blooms and tidal marsh create a layered spring scene that serious naturalists love. By April the saucer magnolias and early warblers arrive simultaneously. Then in July, the lotus blooms transform this place into something otherworldly.
+        </div>
+        <div class="location-tags">
+          <span class="tag-chip">Multi-Season</span>
+          <span class="tag-chip yellow">Magnolias</span>
+          <span class="tag-chip">July Lotus</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="location-item">
+      <div class="location-num">05</div>
+      <div class="location-body">
+        <div class="location-name">Enid A. Haupt Garden (Smithsonian)</div>
+        <div class="location-meta">National Mall · South of Castle</div>
+        <div class="location-desc">
+          The saucer magnolias here bloom roughly 1–2 weeks before the Yoshino cherries as a stunning preview show and substantially more impressive than most people expect. When the cherry trees also come into bloom, this garden is one of the quietest spots on the Mall. Free, always open, almost never crowded.
+        </div>
+        <div class="location-tags">
+          <span class="tag-chip yellow">Saucer Magnolias First</span>
+          <span class="tag-chip">Low Crowds</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="location-item">
+      <div class="location-num">06</div>
+      <div class="location-body">
+        <div class="location-name">Rawlins Park</div>
+        <div class="location-meta">Dupont Circle Area · Neighborhood Gem</div>
+        <div class="location-desc">
+          A small urban park near Dupont Circle that erupts with saucer magnolias and early flowering cherries before the Tidal Basin peaks. A favorite among locals and walkable from the Red Line. Great for pre-peak reconnaissance without all of the tourists.
+        </div>
+        <div class="location-tags">
+          <span class="tag-chip">Local Secret</span>
+          <span class="tag-chip">Metro Access</span>
+          <span class="tag-chip yellow">Early Preview</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="location-item">
+      <div class="location-num">07</div>
+      <div class="location-body">
+        <div class="location-name">Capitol Grounds</div>
+        <div class="location-meta">Capitol Hill · East &amp; West Fronts</div>
+        <div class="location-desc">
+          Cherry trees line the paths around the Capitol's East and West Fronts. The East Front plaza has a cluster of Yoshinos that bloom alongside the iconic dome backdrop — an underused vantage with easy Metro access from Capitol South. Crowds are a fraction of the Tidal Basin, and the architectural framing is unmatched.
+        </div>
+        <div class="location-tags">
+          <span class="tag-chip">Monument Views</span>
+          <span class="tag-chip">Metro Access</span>
+          <span class="tag-chip yellow">Low Crowds</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="location-item">
+      <div class="location-num">08</div>
+      <div class="location-body">
+        <div class="location-name">Dumbarton Oaks</div>
+        <div class="location-meta">Georgetown · R St NW</div>
+        <div class="location-desc">
+          A 27-acre historic garden in Georgetown with a Japanese-influenced terrace and cherry trees that bloom slightly ahead of the Tidal Basin due to the sheltered microclimate. Small admission fee, but delivers near-zero crowds and impeccably maintained grounds. The formal garden design makes for exceptional photography even on cloudy days.
+        </div>
+        <div class="location-tags">
+          <span class="tag-chip yellow">Early Bloom</span>
+          <span class="tag-chip">Georgetown</span>
+          <span class="tag-chip">Admission Required</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="location-item">
+      <div class="location-num">09</div>
+      <div class="location-body">
+        <div class="location-name">US National Arboretum</div>
+        <div class="location-meta">NE Washington DC · New York Ave NE</div>
+        <div class="location-desc">
+          446 acres of ornamental trees and shrubs including multiple cherry varieties across sweeping hillsides. The Azalee Collection and National Bonsai pavilion are peak-season bonuses. This place is essentially unknown to casual visitors — free parking, tranquil trails, and a level of variety you won't find anywhere else in the city. The Glenn Dale Azaleas typically peak alongside or just after the cherries.
+        </div>
+        <div class="location-tags">
+          <span class="tag-chip">Multiple Varieties</span>
+          <span class="tag-chip yellow">Free Parking</span>
+          <span class="tag-chip">Low Crowds</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- HISTORICAL -->
+<section id="history">
+  <div class="section-eyebrow">Historic Data</div>
+  <h2 class="section-title"><em>Historical</em> Peak Bloom</h2>
+
+  <p class="lead">
+    Our records go back to 1921 and the data tells a clear story: peak bloom is trending earlier. The long-run average is April 3. The 2015–2024 average is March 27. Climate Central projects early March as the norm by 2070.
+  </p>
+
+  <div class="chart-wrap fade-in">
+    <div class="chart-title">Peak Bloom Dates of the Recent Decade</div>
+    <div class="chart-sub">Each bar represents days into spring. Dashed gold line = 2015–2024 average (March 27 ≈ day 86). 2026 shown as projected range.</div>
+
+    <!--
+      Reference: March 15 = day 74 (earliest ever, 1990)
+      April 18 = day 108 (latest ever, 1958)
+      We'll map Mar 15 (day 74) to 0%, Apr 18 (day 108) to 100% for bar widths.
+      Range = 34 days. Bar width = (peak_day - 74) / 34 * 100%
+
+      2015: April 11 = day 101  → (101-74)/34 = 79%
+      2016: March 25 = day 84   → (84-74)/34  = 29%
+      2017: March 25 = day 84   → 29%
+      2018: April 5  = day 95   → (95-74)/34  = 62%
+      2019: April 1  = day 91   → (91-74)/34  = 50%
+      2020: March 20 = day 79   → (79-74)/34  = 15%
+      2021: March 28 = day 87   → (87-74)/34  = 38%
+      2022: March 26 = day 85   → (85-74)/34  = 32%
+      2023: March 23 = day 82   → (82-74)/34  = 24%
+      2024: March 17 = day 76   → (76-74)/34  = 6%
+      2025: March 28 = day 87   → (87-74)/34  = 38%
+      2026: April ~5 = day 95   → ~62% (projected range Mar 28–Apr 10)
+      Average Mar 27 = day 86   → (86-74)/34 = 35%
+    -->
+    <div class="chart-bars" id="chartBars">
+      <div class="bar-row">
+        <span class="bar-year">2015</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:79%;left:0;"><div class="bar-date"><strong>April 11</strong></div></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-year">2016</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:29%;left:0;"><div class="bar-date"><strong>March 25</strong></div></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-year">2017</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:29%;left:0;"><div class="bar-date"><strong>March 25</strong></div></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-year">2018</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:62%;left:0;"><div class="bar-date"><strong>April 5</strong></div></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-year">2019</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:50%;left:0;"><div class="bar-date"><strong>April 1</strong></div></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-year">2020</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:15%;left:0;"><div class="bar-date"><strong>March 20</strong></div></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-year">2021</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:38%;left:0;"><div class="bar-date"><strong>March 28</strong></div></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-year">2022</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:32%;left:0;"><div class="bar-date"><strong>March 26</strong></div></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-year">2023</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:24%;left:0;"><div class="bar-date"><strong>March 23</strong></div></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-year">2024</span>
+        <div class="bar-track">
+          <div class="bar-fill highlight" style="width:6%;left:0;"><div class="bar-date" style="left:calc(100% + 8px);right:auto;"><strong>March 17</strong> — 2nd earliest on record</div></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-year">2025</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:38%;left:0;"><div class="bar-date"><strong>March 28</strong></div></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-year" style="color:var(--pink-deep);">2026</span>
+        <div class="bar-track">
+          <div class="bar-fill forecast" style="width:38%;left:35%;"><div class="bar-date" style="color:var(--pink-deep);">Mar 28–Apr 10 <em>(projected)</em></div></div>
+          <!-- avg line at 35% -->
+          <div class="avg-line" style="left:35%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="avg-label-row">
+      <span class="avg-label">↑ Gold line = 2015–2024 avg (March 27) &nbsp; Left = earlier &nbsp; Right = later</span>
+    </div>
+
+    <div class="chart-legend">
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: linear-gradient(90deg, var(--pink-pale), var(--pink));"></div>
+        Recent peak bloom
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: linear-gradient(90deg, var(--pink-deep), var(--pink-vivid));"></div>
+        Notable year
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(200,100,130,0.4) 3px, rgba(200,100,130,0.4) 6px); border: 1px dashed var(--pink-deep);"></div>
+        2026 projected range
+      </div>
+    </div>
+  </div>
+
+  <p class="body-text">
+    <strong>Records to know:</strong> Earliest ever: March 15, 1990 (exceptionally warm winter). Latest ever: April 18, 1958 (exceptionally cold, similar to this year's pattern). Long-run average since 1921: April 3. The bloom has arrived before April 4 in 16 of the past 20 years. The 2024 bloom (March 17) was the second-earliest on record, driven by an unusually warm February and March.
+  </p>
+</section>
+
+<!-- BLOOM STAGES -->
+<section id="stages">
+  <div class="section-eyebrow">Phenology</div>
+  <h2 class="section-title">The Six <em>Stages</em> of Bloom</h2>
+  <p class="lead">Understanding where the trees are in their cycle is how you know when to visit them! NPS tracks six defined stages, with stage 6 being the moment everyone's chasing.</p>
+
+  <div class="stages-grid fade-in">
+    <div class="stage-item">
+      <span class="stage-num">01</span>
+      <span class="stage-icon">🌿</span>
+      <span class="stage-name">Green Buds</span>
+      <span class="stage-desc">Dormancy breaks and the first green tips become visible on branch tips. Usually late Feb–early March.</span>
+    </div>
+    <div class="stage-item">
+      <span class="stage-num">02</span>
+      <span class="stage-icon">🔍</span>
+      <span class="stage-name">Florets Visible</span>
+      <span class="stage-desc">Green bud opens slightly and individual flower clusters (florets) become distinguishable.</span>
+    </div>
+    <div class="stage-item">
+      <span class="stage-num">03</span>
+      <span class="stage-icon">📏</span>
+      <span class="stage-name">Extension of Florets</span>
+      <span class="stage-desc">Florets elongate and separate, and pale color begins to show through the green.</span>
+    </div>
+    <div class="stage-item">
+      <span class="stage-num">04</span>
+      <span class="stage-icon">🌱</span>
+      <span class="stage-name">Peduncle Elongation</span>
+      <span class="stage-desc">The flower stem (peduncle) stretches and blossoms start to hang and become clearly flower-shaped.</span>
+    </div>
+    <div class="stage-item">
+      <span class="stage-num">05</span>
+      <span class="stage-icon">🤍</span>
+      <span class="stage-name">Puffy White</span>
+      <span class="stage-desc">Blossoms are nearly open but still closed, appearing puffy and white. This is 1–3 days from peak, visit now to beat crowds.</span>
+    </div>
+    <div class="stage-item" style="background: linear-gradient(135deg, rgba(249,213,220,0.4) 0%, var(--cream) 100%);">
+      <span class="stage-num" style="color:var(--pink-deep);">06</span>
+      <span class="stage-icon">🌸</span>
+      <span class="stage-name" style="color:var(--pink-deep);">Peak Bloom</span>
+      <span class="stage-desc">70%+ of Yoshino blossoms open = the declared peak. Lasts 3–7 days.</span>
+    </div>
+  </div>
+
+  <p class="body-text">
+    <strong>Tip:</strong> Stage 5 ("puffy white") is an underrated time to visit. The trees look spectacular, and crowds are noticeably thinner than on the declared peak bloom date. In 2024, green buds appeared March 2 and peak bloom arrived just 15 days later (an unusually compressed cycle). In 2008, the same process took five weeks.
+  </p>
+
+  <div class="iframe-wrap fade-in">
+    <iframe src="https://player.vimeo.com/video/532385669" title="Cherry Blossom Timelapse — DC Tidal Basin" allowfullscreen loading="lazy"></iframe>
+  </div>
+</section>
+
+<!-- FUN FACTS -->
+<section id="facts">
+  <div class="section-eyebrow">History & Science</div>
+  <h2 class="section-title">Things Worth <em>Knowing</em></h2>
+
+  <div class="facts-grid fade-in">
+    <div class="fact-item">
+      <span class="fact-icon">🇯🇵</span>
+      <div class="fact-title">The 1912 Gift</div>
+      <div class="fact-body">Tokyo Mayor Yukio Ozaki gifted <strong>3,020 cherry trees</strong> to Washington in 1912 as a symbol of friendship between Japan and the United States. The original shipment of 2,000 trees in 1910 was destroyed as they arrived diseased and had to be burned. The replacement gift in 1912 was the successful planting. Today the stock has grown to approximately 3,800 trees across multiple varieties.</div>
+    </div>
+    <div class="fact-item">
+      <span class="fact-icon">🌡️</span>
+      <div class="fact-title">The Climate Signal</div>
+      <div class="fact-body">Peak bloom has trended <strong>~1 week earlier</strong> over the past century. From 1931–1960, average peak was April 6. From 1981–2010, it was April 1. The 2015–2024 average is March 27. Climate Central projects bloom as early as <strong>early March by 2070</strong>. The 2024 bloom (March 17) was the second-earliest on record. 2026's cold winter is going to be an outlier.</div>
+    </div>
+    <div class="fact-item">
+      <span class="fact-icon">🌸</span>
+      <div class="fact-title">11 Varieties, One Famous One</div>
+      <div class="fact-body">There are <strong>11 varieties</strong> of cherry blossom in DC. The most famous, and the ones that create the iconic white cloud effect at the Tidal Basin, are <strong>Yoshino</strong> (Prunus × yedoensis). The <strong>Kwanzan</strong> variety at East Potomac Park blooms 1–2 weeks later with deeper pink, double-petaled flowers. They give you a second act if you miss the Yoshino window.</div>
+    </div>
+    <div class="fact-item">
+      <span class="fact-icon">❄️</span>
+      <div class="fact-title">The Frost Danger Window</div>
+      <div class="fact-body">Once blossoms open, they're vulnerable. The NPS reports damage begins at <strong>27°F</strong> and becomes significant below <strong>24°F</strong>. A late frost during Stage 5 or 6 can brown and collapse the entire bloom overnight. Cold is not the trees' enemy during dormancy, only during the open bloom window. The 2026 cold winter actually builds resilience, but danger arrives once they open.</div>
+    </div>
+    <div class="fact-item">
+      <span class="fact-icon">🏗️</span>
+      <div class="fact-title">The Tidal Basin Construction</div>
+      <div class="fact-body">Phase 1 of a major seawall reconstruction is complete, addressing decades of <strong>sea level rise and flooding</strong> that threatened the root systems of the cherry trees. Some trees were removed for the project in 2024. New saplings are being added in 2026. The southern corner of the basin will still show construction in spring 2026, but most of the loop remains accessible.</div>
+    </div>
+    <div class="fact-item">
+      <span class="fact-icon">📸</span>
+      <div class="fact-title">The Crowd Math</div>
+      <div class="fact-body">The cherry blossoms draw over <strong>1.5 million visitors</strong> annually with the majority concentrated into the peak bloom window of perhaps 5–7 days. The Tidal Basin loop is only 1.75 miles. That math is brutal on weekends between 9am–6pm. <strong>The move</strong>: arrive 30 min before sunrise and leave before 9am, visit mid-week, or wait for Stage 5 the weekend prior to peak.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section id="tools">
+  <div class="section-eyebrow">The Tech Stack</div>
+  <h2 class="section-title">Tracking & <em>Monitoring</em></h2>
+  <p class="lead">Build a system where the trees come to you! All of this is free and takes 10 minutes to set up.</p>
+
+  <div class="tools-grid fade-in">
+    <div class="tool-card">
+      <span class="tool-name">Live Monitoring</span>
+      <div class="tool-title">NPS Bloom Watch + BloomCam</div>
+      <div class="tool-desc">The National Park Service runs the official bloom stage tracker and a live BloomCam pointed at the Tidal Basin. This is the authoritative source. Stage updates post when conditions change, typically every few days leading up to peak.</div>
+      <a class="tool-link" href="https://www.nps.gov/subjects/cherryblossom/bloom-watch.htm" target="_blank">nps.gov/cherryblossom →</a>
+      <a class="tool-link" href="https://www.bloomcam.org" target="_blank" style="display:block; margin-top:4px;">bloomcam.org →</a>
+    </div>
+    <div class="tool-card">
+      <span class="tool-name">Independent Tracking</span>
+      <div class="tool-title">Cherry Blossom Watch</div>
+      <div class="tool-desc">Independently run photo-based tracker updated frequently with on-the-ground observations. Aggregates all major forecasts (NPS, Washington Post, Storm Team 4) in one place. Often updated more frequently than the NPS page during the approach to peak.</div>
+      <a class="tool-link" href="https://cherryblossomwatch.com" target="_blank">cherryblossomwatch.com →</a>
+      <a class="tool-link" href="https://cherryblossomwatch.substack.com/" target="_blank" style="display:block; margin-top:4px;">Subscribe to email updates →</a>
+    </div>
+    <div class="tool-card">
+      <span class="tool-name">Flock Migration Intelligence</span>
+      <div class="tool-title">BirdCast</div>
+      <div class="tool-desc">Uses NEXRAD radar to track actual migration in real time. Spring cherry blossom visits coincide with the beginning of warbler migration and BirdCast tells you when a wave is coming. Plan your Tidal Basin visit for a morning after a south wind and you're likely to log Ospreys, early warblers, Great Blue Herons, and migrant sparrows simultaneously.</div>
+      <a class="tool-link" href="https://birdcast.info" target="_blank">birdcast.info →</a>
+    </div>
+    <div class="tool-card">
+      <span class="tool-name">Festival HeadQuarters</span>
+      <div class="tool-title">National Cherry Blossom Festival</div>
+      <div class="tool-desc">The 2026 festival runs March 20 – April 12. Events include the Sakura Matsuri Japanese Street Festival, the Kite Festival, Petalpalooza, and the parade. Many events are free. The Cherry Blossom 10 Mile Run is April 12. Schedule and tickets at the official site.</div>
+      <a class="tool-link" href="https://nationalcherryblossomfestival.org" target="_blank">nationalcherryblossomfestival.org →</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  DC Cherry Blossom Field Guide
+  <span>✦</span>
+  Spring 2026
+  <span>✦</span>
+  <br>
+  Peak bloom forecast accuracy increases dramatically after March 1: monitor official NPS Bloom Watch.
+</footer>
+
+<script>
+  // ─── CONFIG (update currentStage as season advances) ───
+  // 0 = Green Buds … 5 = Peak Bloom … 7 = Green Leaves
+  const BLOOM_CONFIG = {
+    currentStage: 0,
+    lastUpdated: "Feb 28, 2026"
+  };
+
+  const BLOOM_STAGES = [
+    { name: "Green Buds",          icon: "🌿",  desc: "First green tips appear on branch tips." },
+    { name: "Florets Visible",     icon: "🔍",  desc: "Individual flower clusters become distinguishable." },
+    { name: "Florets Extended",    icon: "📏",  desc: "Florets elongate; pale color shows through green." },
+    { name: "Peduncle Elongation", icon: "🌱",  desc: "Flower stems stretch; blossoms become flower-shaped." },
+    { name: "Puffy White",         icon: "🤍",  desc: "Nearly open, puffy and white. 1–3 days from peak." },
+    { name: "Peak Bloom",          icon: "🌸",  desc: "70%+ Yoshinos open. The moment everyone's chasing." },
+    { name: "Petals Falling",      icon: "🍃",  desc: "Hanafubuki — petal snow drifting on the wind." },
+    { name: "Green Leaves",        icon: "🌳",  desc: "Blossoms replaced by fresh green foliage." }
+  ];
+
+  const MAP_LOCATIONS = [
+    { num: "01", name: "Tidal Basin",                        lat: 38.8820, lng: -77.0430, meta: "West Potomac Park",          tags: ["Yoshino · Primary", "Sunrise Magic"] },
+    { num: "02", name: "East Potomac Park / Hains Point",    lat: 38.8660, lng: -77.0371, meta: "SW Washington DC",           tags: ["Kwanzan · Later Bloom", "Lower Crowds"] },
+    { num: "03", name: "Washington Monument Grounds",        lat: 38.8895, lng: -77.0353, meta: "National Mall",              tags: ["Monument Views"] },
+    { num: "04", name: "Kenilworth Park & Aquatic Gardens",  lat: 38.9136, lng: -76.9475, meta: "NE Washington DC",           tags: ["Multi-Season", "July Lotus"] },
+    { num: "05", name: "Enid A. Haupt Garden",               lat: 38.8876, lng: -77.0261, meta: "National Mall · Smithsonian",tags: ["Saucer Magnolias First", "Low Crowds"] },
+    { num: "06", name: "Rawlins Park",                       lat: 38.9078, lng: -77.0472, meta: "Dupont Circle Area",         tags: ["Local Secret", "Early Preview"] },
+    { num: "07", name: "Capitol Grounds",                    lat: 38.8899, lng: -77.0091, meta: "Capitol Hill",               tags: ["Monument Views", "Metro Access"] },
+    { num: "08", name: "Dumbarton Oaks",                     lat: 38.9143, lng: -77.0616, meta: "Georgetown · R St NW",       tags: ["Early Bloom", "Georgetown"] },
+    { num: "09", name: "US National Arboretum",              lat: 38.9097, lng: -76.9678, meta: "NE Washington DC",           tags: ["Multiple Varieties", "Free Parking"] }
+  ];
+
+  // ─── TIMELINE ───
+  function renderTimeline() {
+    const track = document.getElementById('bloom-timeline-track');
+    const updated = document.getElementById('timeline-updated');
+    if (!track) return;
+
+    const { currentStage, lastUpdated } = BLOOM_CONFIG;
+    let html = '<div class="timeline-line"></div>';
+
+    BLOOM_STAGES.forEach((stage, i) => {
+      const state = i < currentStage ? 'past' : (i === currentStage ? 'current' : 'future');
+      const youAreHere = i === currentStage
+        ? '<span class="you-are-here">YOU ARE HERE</span>'
+        : '';
+      html += `
+        <div class="timeline-node-wrap">
+          <div class="timeline-node ${state}">${stage.icon}</div>
+          <div class="timeline-name ${state}">${stage.name}</div>
+          ${youAreHere}
+        </div>`;
+    });
+
+    track.innerHTML = html;
+    if (updated) updated.textContent = 'Last updated: ' + lastUpdated;
+  }
+
+  // ─── MAP ───
+  function initMap() {
+    if (typeof L === 'undefined' || !document.getElementById('blossom-map')) return;
+
+    const map = L.map('blossom-map', { center: [38.889, -77.025], zoom: 13 });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CartoDB</a>',
+      maxZoom: 19
+    }).addTo(map);
+
+    MAP_LOCATIONS.forEach(loc => {
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="blossom-marker">${loc.num}</div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -20]
+      });
+
+      const tagsHtml = loc.tags.map(t => `<span class="popup-tag">${t}</span>`).join('');
+      const popupContent = `
+        <div class="blossom-popup">
+          <div class="popup-num">${loc.num}</div>
+          <div class="popup-name">${loc.name}</div>
+          <div class="popup-meta">${loc.meta}</div>
+          <div class="popup-tags">${tagsHtml}</div>
+        </div>`;
+
+      L.marker([loc.lat, loc.lng], { icon }).addTo(map).bindPopup(popupContent);
+    });
+  }
+
+  // ─── INIT ───
+  document.addEventListener('DOMContentLoaded', () => {
+    renderTimeline();
+    initMap();
+
+    // Intersection observer for fade-in
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  });
+</script>
+
+</body>
+</html>
